@@ -1,0 +1,39 @@
+---
+title: "STATS 506 HW 3"
+author: "Calder Moore"
+format: pdf
+editor: visual
+---
+
+# STATS 506 HW 3
+
+## Problem 1 -
+
+### a)
+
+```{r}
+library(haven)
+
+audio <- read_xpt("AUX_I.xpt")
+demo <- read_xpt("DEMO_I.xpt")
+
+audio_demo <- merge(audio, demo, by = "SEQN")
+dim(audio_demo)
+```
+
+### b)
+
+```{r}
+audio_demo$RIAGENDR[audio_demo$RIAGENDR == 1] <- 0 #male
+audio_demo$RIAGENDR[audio_demo$RIAGENDR == 2] <- 1 #female
+audio_demo$RIAGENDR <- factor(audio_demo$RIAGENDR)
+
+audio_demo$DMDCITZN[audio_demo$DMDCITZN == 1] <- 0 #citizen by birth or naturalization
+audio_demo$DMDCITZN[audio_demo$DMDCITZN == 2] <- 1 #non-citizen
+audio_demo$DMDCITZN[audio_demo$DMDCITZN == 7] <- NA #refused: 9 observations
+audio_demo$DMDCITZN[audio_demo$DMDCITZN == 9] <- NA #don't know: 7 observations
+audio_demo$DMDCITZN <- factor(audio_demo$DMDCITZN)
+
+
+```
+
