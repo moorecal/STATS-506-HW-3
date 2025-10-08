@@ -113,6 +113,7 @@ SQLcustomer <- dbGetQuery(sakila, "SELECT store_id, COUNT(customer_id) AS custom
                     GROUP BY store_id")
 
 SQLcustomer
+
 #R
 store1 <- subset(Rsakilacustomer, store_id == 1)
 store2 <- subset(Rsakilacustomer, store_id == 2)
@@ -131,6 +132,29 @@ microbenchmark(customers)
 They are both quite fast in this case.
 
 ### b)
+
+```{r}
+
+countries <- dbGetQuery(sakila,
+                        "SELECT name, country
+                         FROM staff_list")
+
+countries
+
+stafflist <- dbGetQuery(sakila, "SELECT * FROM staff_list")
+
+staffmat <- matrix(c(stafflist$name, stafflist$country), nrow = 2)
+colnames(staffmat) <- c("Name", "Country")
+
+staffmat
+
+microbenchmark(countries)
+microbenchmark(staffmat)
+```
+
+Again, similarly speedy.
+
+### c)
 
 ```{r}
 
