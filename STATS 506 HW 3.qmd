@@ -100,3 +100,47 @@ The coefficient on the gender variable in the L2 model is significant at the 99.
 
 ### a)
 
+```{r}
+library(DBI)
+
+sakila <- dbConnect(RSQLite::SQLite(), "sakila_master.db")
+Rsakilacustomer <- dbGetQuery(sakila, "SELECT * FROM customer")
+
+#SQL
+#multiply the SUM(active) by 100.0 to make a percent and to get around integer division
+SQLcustomer <- dbGetQuery(sakila, "SELECT store_id, COUNT(customer_id) AS customercount, 100.0 * SUM(active)/COUNT(customer_id) as percentactive
+                    FROM customer
+                    GROUP BY store_id")
+
+SQLcustomer
+#R
+store1 <- subset(Rsakilacustomer, store_id == 1)
+store2 <- subset(Rsakilacustomer, store_id == 2)
+
+customers <- matrix(c(1, 2, nrow(store1), nrow(store2), 100*sum(as.numeric(store1$active))/nrow(store1), 100*sum(as.numeric(store2$active))/nrow(store2)), nrow = 2)
+colnames(customers) <- c("Store", "Customer Count", "Percent Active")
+
+customers
+
+library(microbenchmark)
+
+microbenchmark(SQLcustomer)
+microbenchmark(customers)
+```
+
+They are both quite fast in this case.
+
+### b)
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
