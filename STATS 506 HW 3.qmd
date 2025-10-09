@@ -36,7 +36,8 @@ audio_demo$DMDCITZN <- factor(audio_demo$DMDCITZN)
 
 #household size for kids under 5 seems to be okay
 
-#drop groups 12 and 13 since they are redundant and don't have many observations (~450 out of ~10,000)
+#drop groups 12 and 13 since they are redundant and don't have many observations 
+#(~450 out of ~10,000)
 audio_demo <- subset(audio_demo, !(INDHHIN2 %in% c(12, 13)))
 audio_demo$INDHHIN2[audio_demo$INDHHIN2 == 77] <- NA #refused: 220 obs
 audio_demo$INDHHIN2[audio_demo$INDHHIN2 == 99] <- NA #don't know: 134 obs
@@ -108,7 +109,8 @@ Rsakilacustomer <- dbGetQuery(sakila, "SELECT * FROM customer")
 
 #SQL
 #multiply the SUM(active) by 100.0 to make a percent and to get around integer division
-SQLcustomer <- dbGetQuery(sakila, "SELECT store_id, COUNT(customer_id) AS customercount, 100.0 * SUM(active)/COUNT(customer_id) as percentactive
+SQLcustomer <- dbGetQuery(sakila, "SELECT store_id, COUNT(customer_id) AS customercount, 
+                                      100.0 * SUM(active)/COUNT(customer_id) as percentactive
                     FROM customer
                     GROUP BY store_id")
 
@@ -118,7 +120,9 @@ SQLcustomer
 store1 <- subset(Rsakilacustomer, store_id == 1)
 store2 <- subset(Rsakilacustomer, store_id == 2)
 
-customers <- matrix(c(1, 2, nrow(store1), nrow(store2), 100*sum(as.numeric(store1$active))/nrow(store1), 100*sum(as.numeric(store2$active))/nrow(store2)), nrow = 2)
+customers <- matrix(c(1, 2, nrow(store1), nrow(store2), 
+                      100*sum(as.numeric(store1$active))/nrow(store1), 
+                      100*sum(as.numeric(store2$active))/nrow(store2)), nrow = 2)
 colnames(customers) <- c("Store", "Customer Count", "Percent Active")
 
 customers
@@ -149,7 +153,8 @@ sakadd <- dbGetQuery(sakila, "SELECT * FROM address")
 sakcity <- dbGetQuery(sakila, "SELECT * FROM city")
 sakcountry <- dbGetQuery(sakila, "SELECT * FROM country")
 
-Rsak <- merge(sakcountry, merge(sakcity, merge(sakadd, sakstaff, by = "address_id"), by = "city_id"), by = "country_id")
+Rsak <- merge(sakcountry, merge(sakcity, merge(sakadd, sakstaff, by = "address_id"), 
+                                by = "city_id"), by = "country_id")
 
 staffmat <- matrix(c(paste(Rsak$first_name, Rsak$last_name), Rsak$country), nrow = 2)
 colnames(staffmat) <- c("Name", "Country")
@@ -182,9 +187,11 @@ sakin <- dbGetQuery(sakila, "SELECT * FROM inventory")
 sakrent <- dbGetQuery(sakila, "SELECT * FROM rental")
 sakpay <- dbGetQuery(sakila, "SELECT * FROM payment")
 
-Rsakpay <- merge(sakpay, merge(sakrent, merge(sakin, sakfilm, by = "film_id"), by = "inventory_id"), by = "rental_id")
+Rsakpay <- merge(sakpay, merge(sakrent, merge(sakin, sakfilm, by = "film_id"), 
+                               by = "inventory_id"), by = "rental_id")
 
-filmmat <- matrix(c(Rsakpay$title[Rsakpay$amount == max(Rsakpay$amount)], Rsakpay$amount[Rsakpay$amount == max(Rsakpay$amount)]), ncol = 2)
+filmmat <- matrix(c(Rsakpay$title[Rsakpay$amount == max(Rsakpay$amount)], 
+                    Rsakpay$amount[Rsakpay$amount == max(Rsakpay$amount)]), ncol = 2)
 colnames(filmmat) <- c("Film", "Value")
 
 filmmat
@@ -232,12 +239,49 @@ noampersands <- aus$company_name[grepl("[0123456789!@#$%^*()<>?]", aus$company_n
 ### d)
 
 ```{r}
-aus$landascell <- for(i in 1:length(aus$phone1)){
-    
+#split along "-" to get the parts easier to paste and substr
+phoneparts <- strsplit(aus$phone1, "-")
+
+#basically a big paste function for each of the components of the number
+newphones <- c()
+for (i in 1:length(phoneparts)){
+  newphones <- c(newphones, paste(phoneparts[[i]][1], substr(phoneparts[[i]][2], 1, 2), "-", 
+                                  substr(phoneparts[[i]][2], 3, 4), substr(phoneparts[[i]][3], 1, 1), "-",
+                                  substr(phoneparts[[i]][3], 2, 4), sep = ""))
 }
+
+aus$phone3 <- newphones
+
+#compare against values of phone1 and structure of phone 2. I put phone3 in the 
+#middle to compare
+
+data.frame(aus$phone1[1:10], aus$phone3[1:10], aus$phone2[1:10])
 ```
 
+### e)
+
+```{r}
+#check for numbers at the end of the address, get rid of the rest of the address if they 
+#aren't there get rid of an address if no numbers at the end. Need *? so that not only 
+#the last number is included. Otherwise it cuts off all numbers but the last
+
+addresses <- ifelse(grepl("[0-9]+$", aus$address), 
+                    sub(".*?([0-9]+)$", "\\1", aus$address), 
+                    "")
 
 
+addressesnum <- as.numeric(addresses)
 
+hist(log(addressesnum))
+```
+
+### f)
+
+```{r}
+benford <- substr(addresses, 1, 1)
+
+hist(as.numeric(benford))
+```
+
+This could plausibly be real data since 1 occurs with the most frequency, although the pattern of larger digits being less frequent doesn't strictly hold. 9 for example is much more frequent than 6 or 7. But overall the pattern though is not so extreme as to be abnormal, so it could maybe pass depending on how strict one is with the criteria.
 
