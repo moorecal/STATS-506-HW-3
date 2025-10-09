@@ -200,12 +200,42 @@ Still similar run times.
 ### a)
 
 ```{r}
+aus <- read.csv("au-500.csv")
 
+#use grepl since it returns T/F
+100*length(aus$email[grepl(".com", aus$email) & !grepl(".au$", aus$email)])/nrow(aus)
 ```
 
+### b)
 
+```{r}
+#replace everything up to @ with blanks so we're left with the domain name
+domains <- sub(".*@", "", aus$email)
+sort(table(domains), decreasing = TRUE)
+```
 
+hotmail.com is the most common
 
+### c)
+
+```{r}
+ampersands <- aus$company_name[grepl("[0123456789!@#$%^&*()<>?]", aus$company_name)]
+
+noampersands <- aus$company_name[grepl("[0123456789!@#$%^*()<>?]", aus$company_name)]
+
+100*length(ampersands)/nrow(aus)
+100*length(noampersands)/nrow(aus)
+```
+
+8.8% with special characters including ampersands, 0.6% excluding them.
+
+### d)
+
+```{r}
+aus$landascell <- for(i in 1:length(aus$phone1)){
+    
+}
+```
 
 
 
